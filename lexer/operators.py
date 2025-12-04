@@ -2,7 +2,7 @@ from lexer.token import TokenType
 
 
 OPERATORS_2 = {
-    "==": TokenType.EQ,
+    "==": TokenType.EQUAL,
     "!=": TokenType.NE,
     "<=": TokenType.LE,
     ">=": TokenType.GE,

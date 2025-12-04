@@ -13,6 +13,23 @@ class LexicalCodeScanner(Scanner):
         self._next_sym_id = 1
         self._delimiter_stack = []
 
+        # >>> ADICIONADO <<<
+        self.line = 1
+        self.col = 1
+
+    # >>> ADICIONADO: atualizar linha/col por caractere <<<
+    def _advance(self):
+        ch = self.text[self.i]
+
+        if ch == "\n":
+            self.line += 1
+            self.col = 1
+        else:
+            self.col += 1
+
+        self.i += 1
+        return ch
+
     @staticmethod
     def _is_identifier_start(ch: str) -> bool:
         return ch.isalpha() or ch == "_"
@@ -21,7 +38,7 @@ class LexicalCodeScanner(Scanner):
     def _is_ident_part(ch: str) -> bool:
         return ch.isalnum() or ch == "_"
 
-    def _emit_identifier_incremental_id(self, name: str):
+    def _emit_identifier_incremental_id(self, name: str, line: int, col: int):
         if name not in self.symbols:
             self.symbols[name] = {
                 "id": self._next_sym_id,
@@ -31,62 +48,65 @@ class LexicalCodeScanner(Scanner):
         else:
             self.symbols[name]["count"] += 1
 
-        sym_id = self.symbols[name]["id"]
-        self.tokens.append(Token(TokenType.ID, lexema=name, atributo=f"id{sym_id}"))
-
+        self.tokens.append(Token(TokenType.ID, name, line, col))
 
     def _is_string_start(self, ch: str) -> bool:
         return ch == '"' or ch == "'"
 
     def _handle_string_values(self):
+        start_line = self.line
+        start_col = self.col
+
         if self._peek() == '"':
-                lex = ""
-                self.i += 1
-                while True:
-                    current = self._advance()
-                    has_string_closed = current == '"'
-                    if has_string_closed:
-                        self.tokens.append(Token(TokenType.STR_VALUE, lex))
-                        break
-
-                    is_string_not_closed = current == "\n" or current == "\0"
-                    if is_string_not_closed:
-                        self.tokens.append(Token(TokenType.ERRO, lex))
-                        break
-
-                    lex += current
-
-        elif  self._peek() == "'":
             lex = ""
             self.i += 1
+            self.col += 1
+
             while True:
                 current = self._advance()
-                has_string_closed = current == "'"
-                if has_string_closed:
-                    self.tokens.append(Token(TokenType.STR_VALUE, lex))
+                if current == '"':
+                    self.tokens.append(Token(TokenType.STR_VALUE, lex, start_line, start_col))
                     break
-
-                is_string_not_closed = current == "\n" or current == "\0"
-                if is_string_not_closed:
-                    self.tokens.append(Token(TokenType.ERRO, lex))
+                if current == "\n" or current == "\0":
+                    self.tokens.append(Token(TokenType.ERRO, lex, start_line, start_col))
                     break
-            
                 lex += current
 
+        elif self._peek() == "'":
+            lex = ""
+            self.i += 1
+            self.col += 1
+
+            while True:
+                current = self._advance()
+                if current == "'":
+                    self.tokens.append(Token(TokenType.STR_VALUE, lex, start_line, start_col))
+                    break
+                if current == "\n" or current == "\0":
+                    self.tokens.append(Token(TokenType.ERRO, lex, start_line, start_col))
+                    break
+                lex += current
 
     def _handle_space(self):
         self._advance()
 
     def _handle_identifier(self):
+        start_line = self.line
+        start_col = self.col
+
         lex = self._advance()
         while self._is_ident_part(self._peek()):
             lex += self._advance()
+
         if lex in KEYWORDS:
-            self.tokens.append(Token(TokenType.KEYWORD, lex))
+            self.tokens.append(Token(KEYWORDS[lex], lex, start_line, start_col))
         else:
-            self._emit_identifier_incremental_id(lex)
+            self._emit_identifier_incremental_id(lex, start_line, start_col)
 
     def _handle_number_values(self):
+        start_line = self.line
+        start_col = self.col
+
         lex = self._advance()
         while self._peek().isdigit():
             lex += self._advance()
@@ -103,21 +123,23 @@ class LexicalCodeScanner(Scanner):
             lex += self._advance()
             while self._peek().isdigit():
                 lex += self._advance()
-            self.tokens.append(Token(TokenType.ERRO, lex))
+            self.tokens.append(Token(TokenType.ERRO, lex, start_line, start_col))
             return
-            
 
         if self._is_ident_part(self._peek()):
             while self._is_ident_part(self._peek()):
                 lex += self._advance()
-            self.tokens.append(Token(TokenType.ERRO, lex))
+            self.tokens.append(Token(TokenType.ERRO, lex, start_line, start_col))
         else:
-            self.tokens.append(Token(TokenType.NUM, lex))
+            self.tokens.append(Token(TokenType.NUM, lex, start_line, start_col))
 
     def _is_comment_start(self, chars: str) -> bool:
         return chars == "//" or chars == "/*"
-    
+
     def _handle_comment(self):
+        start_line = self.line
+        start_col = self.col
+
         isLineComment = self._peek2() == "//"
         if (isLineComment):
             while True:
@@ -128,58 +150,70 @@ class LexicalCodeScanner(Scanner):
             while True:
                 if self._peek2() == "*/":
                     self.i += 2
+                    self.col += 2
                     break
-
                 if self._peek() == "\0":
                     break
-                    
                 self.i += 1
+                self.col += 1
 
     def _is_preprocessor_directive_start(self, ch: str) -> bool:
         return ch == "#"
-    
+
     def _handle_preprocessor_directive(self):
+        start_line = self.line
+        start_col = self.col
+
         lex = ""
         while True:
             current = self._advance()
             if current == "\n" or current == "\0":
-                self.tokens.append(Token(TokenType.PP_DIRECTIVE, lex))
+                self.tokens.append(Token(TokenType.PP_DIRECTIVE, lex, start_line, start_col))
                 break
-
             lex += current
-    
+
     def _is_single_operator(self, ch: str) -> bool:
         return ch in OPERATORS_1
-    
+
     def _is_double_operator(self, chars: str) -> bool:
         return chars in OPERATORS_2
-    
-    def _handle_single_operator(self, ch: str):
-        self.tokens.append(Token(OPERATORS_1[ch], self._advance()))
 
-    def _handle_double_operator(self, chars: str):  
-        self.tokens.append(Token(OPERATORS_2[chars], chars))
+    def _handle_single_operator(self, ch: str):
+        start_line = self.line
+        start_col = self.col
+        lex = self._advance()
+        self.tokens.append(Token(OPERATORS_1[ch], lex, start_line, start_col))
+
+    def _handle_double_operator(self, chars: str):
+        start_line = self.line
+        start_col = self.col
         self.i += 2
+        self.col += 2
+        self.tokens.append(Token(OPERATORS_2[chars], chars, start_line, start_col))
 
     def _is_delimiter(self, ch: str) -> bool:
         return ch in DELIMS
-    
+
     def _handle_delimiter(self, ch: str):
+        start_line = self.line
+        start_col = self.col
+
         PAIRS = {")": "(", "]": "[", "}": "{"}
         if ch in PAIRS.values():
             self._delimiter_stack.append(ch)
         elif ch in PAIRS:
             if not self._delimiter_stack:
-                self.tokens.append(Token(TokenType.ERRO, self._advance()))
+                self.tokens.append(Token(TokenType.ERRO, self._advance(), start_line, start_col))
                 return
 
             last_stack_value = self._delimiter_stack[-1]
             if last_stack_value != PAIRS[ch]:
-                self.tokens.append(Token(TokenType.ERRO, self._advance()))
+                self.tokens.append(Token(TokenType.ERRO, self._advance(), start_line, start_col))
             else:
                 self._delimiter_stack.pop()
-        
-        self.tokens.append(Token(DELIMS[ch], self._advance()))
+
+        lex = self._advance()
+        self.tokens.append(Token(DELIMS[ch], lex, start_line, start_col))
 
     def scan_all(self) -> List[Token]:
         while self.i < len(self.text):
@@ -204,21 +238,13 @@ class LexicalCodeScanner(Scanner):
                 case _ if self._is_delimiter(ch):
                     self._handle_delimiter(ch)
                 case _:
-                    self.tokens.append(Token(TokenType.ERRO, self._advance()))
-    
+                    start_line = self.line
+                    start_col = self.col
+                    self.tokens.append(Token(TokenType.ERRO, self._advance(), start_line, start_col))
+
         # fim de arquivo
-        self.tokens.append(Token(TokenType.EOF, ""))
+        self.tokens.append(Token(TokenType.EOF, "", self.line, self.col))
         return self.tokens
 
-    def print_tokens(self):
-        print("\n=== LISTA DE TOKENS ===")
-        for t in self.tokens:
-            print(f"{t.tipo.name:<7}  {t.lexema}  {t.atributo if t.atributo else ''}")
-
-    def print_symbol_table(self, sort_by_name: bool = False):
-        print("\n=== TABELA DE SÍMBOLOS ===")
-        items = list(self.symbols.items())
-        if sort_by_name:
-            items.sort(key=lambda x: x[0])  # ordena alfabeticamente
-        for name, data in items:
-            print(f"id{data['id']:<3}  {name:<10}  ocorrências: {data['count']}")
+    def get_tokens(self) -> List[Token]:
+        return self.tokens

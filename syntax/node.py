@@ -1,4 +1,4 @@
-From dataclasses import dataclass
+from dataclasses import dataclass
 from typing import List, Any, Union
 
 NodeLike = Union[

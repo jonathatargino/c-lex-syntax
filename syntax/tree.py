@@ -1,4 +1,4 @@
-from syntax.tree import NodeLike, node_label
+from syntax.node import NodeLike, node_label
 from typing import List, Dict, Tuple, Any
 from dataclasses import dataclass
 import matplotlib.pyplot as plt

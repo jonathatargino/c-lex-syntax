@@ -11,13 +11,21 @@ class TokenType(Enum):
     ID = auto()       # identificadores (variáveis, funções)
     KEYWORD = auto()  # palavras reservadas (int, if, while, etc.)
     NUM = auto()      # números inteiros
+    EOL = auto()      # fim de linha
     EOF = auto()      # fim de arquivo
     ERRO = auto()     # sequência inválida (ex.: "8a")
     STR_VALUE = auto()
     PP_DIRECTIVE = auto()
 
+    LET = auto()      # palavra reservada 'let'
+    IF = auto()       # palavra reservada 'if'
+    ELSE = auto()     # palavra reservada 'else'
+    FOR = auto()      # palavra reservada 'for'
+    WHILE = auto()    # palavra reservada 'while'
+    RETURN = auto()   # palavra reservada 'return'
+
     # operadores de 2 caracteres
-    EQ = auto()       # ==
+    EQUAL = auto()       # ==
     NE = auto()       # !=
     LE = auto()       # <=
     GE = auto()       # >=
@@ -56,11 +64,10 @@ class TokenType(Enum):
 # ------------------------------
 @dataclass
 class Token:
-    tipo: TokenType           # tipo do token (enum)
-    lexema: str               # texto exato do código
-    atributo: Optional[Any] = None  # opcional: valor convertido ou referência para tabela de símbolos
+    type: str
+    lex: str
+    line: int
+    col: int
 
     def __repr__(self) -> str:
-        if self.atributo is not None:
-            return f"<{self.tipo.name}, {self.lexema}, {self.atributo}>"
-        return f"<{self.tipo.name}, {self.lexema}>"
+        return f"<{self.type}, {self.lex}>"

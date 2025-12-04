@@ -1,6 +1,27 @@
 from lexer.lexical_code_scanner import LexicalCodeScanner
+from syntax.parser import Parser
 import sys
 import os
+
+def parse_code_example_file(filename: str):
+     with open(filename, 'r') as f:
+        codigo = f.read()
+        sc = LexicalCodeScanner(codigo)
+        sc.scan_all()
+        tokens = sc.get_tokens()
+
+        print(tokens)
+
+        parser = Parser(tokens)
+        ast = parser.parse_program()
+
+        if len(parser.errors) == 0:
+            draw_tree(ast, filename)
+            print(f"[{filename}] - OK — AST construída")
+        else:
+            print(f"[{filename}] - ERROS SINTÁTICOS")
+        for error in parser.errors:
+            print(f"  {error}")
 
 SOURCE_DIR = "code_examples"
 
@@ -27,12 +48,8 @@ if __name__ == "__main__":
         filepath = os.path.join(SOURCE_DIR, filename)
 
         try:
-            with open(filepath, 'r') as f:
-                codigo = f.read()
-                sc = LexicalCodeScanner(codigo)
-                sc.scan_all()
-                sc.print_tokens()
-                sc.print_symbol_table(sort_by_name=False)
+            parse_code_example_file(filepath)
         except FileNotFoundError:
             print(f"Erro: O arquivo '{filename}' não foi encontrado'.")
             sys.exit(1)
+
