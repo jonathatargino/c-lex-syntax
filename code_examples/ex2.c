@@ -1,9 +1,7 @@
-int main(void) {
-int x = 42;
-float y = 3.14;
-char c = 'a';
+let x = 42;
+let y = 3.14;
+let c = 'a';
 x = x + 10;
 y = y * 2
-c = '\n';
+c = "\n";
 return x;
-}

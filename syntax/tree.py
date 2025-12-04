@@ -1,6 +1,5 @@
 from syntax.node import NodeLike, node_label
-from typing import List, Dict, Tuple, Any
-from dataclasses import dataclass
+from typing import List, Dict, Tuple
 import matplotlib.pyplot as plt
 
 def children(n: NodeLike) -> List[NodeLike]:

@@ -1,5 +1,6 @@
 from lexer.lexical_code_scanner import LexicalCodeScanner
 from syntax.parser import Parser
+from syntax.tree import draw_tree
 import sys
 import os
 
@@ -10,13 +11,11 @@ def parse_code_example_file(filename: str):
         sc.scan_all()
         tokens = sc.get_tokens()
 
-        print(tokens)
-
         parser = Parser(tokens)
         ast = parser.parse_program()
 
         if len(parser.errors) == 0:
-            draw_tree(ast, filename)
+            draw_tree(ast, filename + ".png")
             print(f"[{filename}] - OK — AST construída")
         else:
             print(f"[{filename}] - ERROS SINTÁTICOS")

@@ -117,6 +117,9 @@ class Parser:
         elif self.match(TokenType.PP_DIRECTIVE):
             self.consume(TokenType.PP_DIRECTIVE)
             return None
+        elif self.match(TokenType.EOF):
+            self.consume(TokenType.EOF)
+            return None
         else:
             tok = self.peek()
             self.emit_error(f"[ERRO] Token inesperado {tok.type} na linha {tok.line}")
@@ -130,7 +133,7 @@ class Parser:
         equal_token = self.consume(TokenType.ASSIGN)
         init = None
 
-        if self.match(TokenType.NUM, TokenType.ID, TokenType.LPAREN):
+        if self.match(TokenType.NUM, TokenType.ID, TokenType.LPAREN, TokenType.STR_VALUE):
             init = self.parse_expression()
         else:
             self.emit_error(f"[ERRO] Esperado expressão após '=', obtido {self.peek().type} na linha {self.peek().line}")
@@ -294,7 +297,7 @@ class Parser:
         tok = self.peek()
         if self.match(TokenType.NUM):
             t = self.consume(TokenType.NUM)
-            return LiteralNode(value=int(t.lex), line=t.line, col=t.col)
+            return LiteralNode(t.lex, line=t.line, col=t.col)
         if self.match(TokenType.ID):
             t = self.consume(TokenType.ID)
             return IdentifierNode(name=t.lex, line=t.line, col=t.col)
