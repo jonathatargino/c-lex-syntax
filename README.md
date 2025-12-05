@@ -1,6 +1,19 @@
 ## Descrição do Projeto
 Analisador léxico e sintático para a linguagem de programação C
 
+### Analisador léxico
+O scanner é responsável por varrer o texto e produzir uma sequência de tokens classificados. Para cada token, o scanner normalmente registra:
+- tipo (p.ex. ID, NUM, operadores, delimitadores),
+- lexema (a sequência de caracteres),
+- posição (linha e coluna) — útil para mensagens de erro e mapeamento na AST.
+No projeto, os tokens são instanciados como objetos (classe Token) e utilizados pelos testes de unidade para garantir que a tokenização de trechos de código produza a sequência esperada.
+
+### Analisador sintático
+O parser consome a sequência de tokens e aplica regras gramaticais para construir nós de AST. Uma abordagem típica para implementações didáticas é o recursive-descent parsing com funções para cada construçãao sintática (expressões, fatores, declaracões, blocos, comandos de controle).
+
+### Output
+O output são imagens de AST construídas de acordo com o código de exemplo
+
 ## Setup do projeto
 
 ### Requisitos
@@ -68,3 +81,4 @@ Todos examplos acima devem criar uma imagem png na pasta `/code_examples` com o 
   - Output esperado:  [ERRO] Esperado RPAREN, obtido TokenType.LBRACE na linha 1
 - invalid_let.c
   - Ouput esperado: [ERRO] Esperado TokenType.ASSIGN, obtido TokenType.NUM na linha 1 
+
