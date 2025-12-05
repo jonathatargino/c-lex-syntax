@@ -49,6 +49,11 @@ pipx install poetry
 poetry install
 ```
 
+Caso você tenha problemas com o Poetry, utilize o `requirements.txt` para instalar as dependências:
+```
+pip install -r requirements.txt
+```
+
 ### Execução do projeto
 Uma vez que as dependências foram instaladas, para executar o projeto você deve rodar 
 
@@ -81,4 +86,5 @@ Todos examplos acima devem criar uma imagem png na pasta `/code_examples` com o 
   - Output esperado:  [ERRO] Esperado RPAREN, obtido TokenType.LBRACE na linha 1
 - invalid_let.c
   - Ouput esperado: [ERRO] Esperado TokenType.ASSIGN, obtido TokenType.NUM na linha 1 
+
 
